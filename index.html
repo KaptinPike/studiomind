@@ -214,6 +214,26 @@
         @media (max-width: 600px) {
             .pain-grid {
                 grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .pain-card {
+                padding: 24px 20px;
+            }
+
+            .pain-card h3 {
+                font-size: 18px;
+            }
+
+            .pain-card p {
+                font-size: 14px;
+            }
+
+            .pain-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+                margin-bottom: 16px;
             }
         }
 
@@ -530,6 +550,15 @@
                 padding: 60px 0;
             }
 
+            .pain h2 {
+                font-size: 28px;
+            }
+
+            .pain > .container > p {
+                margin-bottom: 40px;
+                font-size: 15px;
+            }
+
             .feature {
                 flex-direction: column;
                 gap: 16px;
@@ -537,6 +566,17 @@
 
             .waitlist-form input {
                 width: 100%;
+            }
+        }
+
+        /* Extra small devices */
+        @media (max-width: 380px) {
+            .pain-card {
+                padding: 20px 16px;
+            }
+
+            .pain-card h3 {
+                font-size: 17px;
             }
         }
     </style>

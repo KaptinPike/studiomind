@@ -30,6 +30,14 @@ export async function onRequestPost(context) {
             );
         }
 
+        // Check if API key is configured
+        if (!env.SMTP2GO_API_KEY) {
+            return new Response(
+                JSON.stringify({ error: 'Email service not configured. SMTP2GO_API_KEY environment variable is missing.' }),
+                { status: 500, headers }
+            );
+        }
+
         const emailContent = `
 <!DOCTYPE html>
 <html>
@@ -69,7 +77,7 @@ export async function onRequestPost(context) {
             <p>Best,<br>The StudioMind Team</p>
         </div>
         <div class="footer">
-            <p>&copy; 2024 StudioMind. All rights reserved.</p>
+            <p>&copy; 2025 StudioMind. All rights reserved.</p>
             <p>Built by Pappabee</p>
         </div>
     </div>
@@ -87,28 +95,53 @@ export async function onRequestPost(context) {
                 sender: `StudioMind <${env.FROM_EMAIL || 'hello@studiomind.io'}>`,
                 subject: "Welcome to StudioMind! You're on the waitlist",
                 html_body: emailContent,
-                text_body: `Welcome to the StudioMind Waitlist!\n\nThank you for joining! We're thrilled to have you on board.\n\nAs a founding member, you'll get:\n- Early access before public launch\n- Special founding member pricing\n- Direct input on features we build\n\nWe'll be in touch soon with updates.\n\nBest,\nThe StudioMind Team`
+                text_body: `Welcome to the StudioMind Waitlist!\n\nThank you for joining! We're thrilled to have you on board.\n\nAs a founding member, you'll get:\n- Early access before public launch\n- Special founding member pricing\n- Direct input on features we build\n\nWe'll be in touch soon with updates.\n\nBest,\nThe StudioMind Team`,
+                custom_headers: [
+                    { header: 'Reply-To', value: 'info@pappabee.com' }
+                ]
             })
         });
 
         const data = await response.json();
 
         if (data.data && data.data.succeeded > 0) {
+            // Send notification to chris@pappabee.com about new waitlist signup
+            await fetch('https://api.smtp2go.com/v3/email/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    api_key: env.SMTP2GO_API_KEY,
+                    to: ['chris@pappabee.com'],
+                    sender: `StudioMind <${env.FROM_EMAIL || 'hello@studiomind.io'}>`,
+                    subject: 'New StudioMind Waitlist Signup',
+                    html_body: `<p>New waitlist signup:</p><p><strong>${email}</strong></p>`,
+                    text_body: `New waitlist signup: ${email}`
+                })
+            });
+
             return new Response(
                 JSON.stringify({ success: true, message: 'Email sent successfully' }),
                 { status: 200, headers }
             );
         } else {
             console.error('SMTP2go error:', data);
+            // Return more detailed error info for debugging
+            const errorDetail = data.data?.failures?.[0]?.error
+                || data.data?.error
+                || data.error
+                || (data.data?.error_code ? `Error code: ${data.data.error_code}` : null)
+                || 'Failed to send email - check SMTP2GO API key and sender verification';
             return new Response(
-                JSON.stringify({ error: data.data?.failures?.[0]?.error || 'Failed to send email' }),
+                JSON.stringify({ error: errorDetail, debug: { succeeded: data.data?.succeeded, failed: data.data?.failed } }),
                 { status: 500, headers }
             );
         }
     } catch (error) {
         console.error('Error:', error);
         return new Response(
-            JSON.stringify({ error: 'Internal server error' }),
+            JSON.stringify({ error: `Internal server error: ${error.message}` }),
             { status: 500, headers }
         );
     }

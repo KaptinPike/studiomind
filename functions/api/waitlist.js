@@ -77,7 +77,7 @@ export async function onRequestPost(context) {
             <p>Best,<br>The StudioMind Team</p>
         </div>
         <div class="footer">
-            <p>&copy; 2024 StudioMind. All rights reserved.</p>
+            <p>&copy; 2025 StudioMind. All rights reserved.</p>
             <p>Built by Pappabee</p>
         </div>
     </div>
@@ -95,13 +95,32 @@ export async function onRequestPost(context) {
                 sender: `StudioMind <${env.FROM_EMAIL || 'hello@studiomind.io'}>`,
                 subject: "Welcome to StudioMind! You're on the waitlist",
                 html_body: emailContent,
-                text_body: `Welcome to the StudioMind Waitlist!\n\nThank you for joining! We're thrilled to have you on board.\n\nAs a founding member, you'll get:\n- Early access before public launch\n- Special founding member pricing\n- Direct input on features we build\n\nWe'll be in touch soon with updates.\n\nBest,\nThe StudioMind Team`
+                text_body: `Welcome to the StudioMind Waitlist!\n\nThank you for joining! We're thrilled to have you on board.\n\nAs a founding member, you'll get:\n- Early access before public launch\n- Special founding member pricing\n- Direct input on features we build\n\nWe'll be in touch soon with updates.\n\nBest,\nThe StudioMind Team`,
+                custom_headers: [
+                    { header: 'Reply-To', value: 'info@pappabee.com' }
+                ]
             })
         });
 
         const data = await response.json();
 
         if (data.data && data.data.succeeded > 0) {
+            // Send notification to chris@pappabee.com about new waitlist signup
+            await fetch('https://api.smtp2go.com/v3/email/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    api_key: env.SMTP2GO_API_KEY,
+                    to: ['chris@pappabee.com'],
+                    sender: `StudioMind <${env.FROM_EMAIL || 'hello@studiomind.io'}>`,
+                    subject: 'New StudioMind Waitlist Signup',
+                    html_body: `<p>New waitlist signup:</p><p><strong>${email}</strong></p>`,
+                    text_body: `New waitlist signup: ${email}`
+                })
+            });
+
             return new Response(
                 JSON.stringify({ success: true, message: 'Email sent successfully' }),
                 { status: 200, headers }

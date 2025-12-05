@@ -30,6 +30,14 @@ export async function onRequestPost(context) {
             );
         }
 
+        // Check if API key is configured
+        if (!env.SMTP2GO_API_KEY) {
+            return new Response(
+                JSON.stringify({ error: 'Email service not configured. SMTP2GO_API_KEY environment variable is missing.' }),
+                { status: 500, headers }
+            );
+        }
+
         const emailContent = `
 <!DOCTYPE html>
 <html>
@@ -100,15 +108,21 @@ export async function onRequestPost(context) {
             );
         } else {
             console.error('SMTP2go error:', data);
+            // Return more detailed error info for debugging
+            const errorDetail = data.data?.failures?.[0]?.error
+                || data.data?.error
+                || data.error
+                || (data.data?.error_code ? `Error code: ${data.data.error_code}` : null)
+                || 'Failed to send email - check SMTP2GO API key and sender verification';
             return new Response(
-                JSON.stringify({ error: data.data?.failures?.[0]?.error || 'Failed to send email' }),
+                JSON.stringify({ error: errorDetail, debug: { succeeded: data.data?.succeeded, failed: data.data?.failed } }),
                 { status: 500, headers }
             );
         }
     } catch (error) {
         console.error('Error:', error);
         return new Response(
-            JSON.stringify({ error: 'Internal server error' }),
+            JSON.stringify({ error: `Internal server error: ${error.message}` }),
             { status: 500, headers }
         );
     }

@@ -25,12 +25,15 @@
             box-sizing: border-box;
         }
 
+        html, body {
+            overflow-x: hidden;
+        }
+
         body {
             font-family: 'DM Sans', sans-serif;
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
-            overflow-x: hidden;
         }
 
         /* Subtle texture */
@@ -180,9 +183,12 @@
         .pain {
             background: var(--bg-warm);
             padding: 100px 0;
-            margin: 0 -100vw;
-            padding-left: 100vw;
-            padding-right: 100vw;
+            position: relative;
+            width: 100vw;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-left: 0;
+            margin-right: 0;
         }
 
         .pain h2 {
@@ -347,9 +353,10 @@
             color: var(--bg);
             padding: 80px 0;
             text-align: center;
-            margin: 0 -100vw;
-            padding-left: 100vw;
-            padding-right: 100vw;
+            position: relative;
+            width: 100vw;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .proof blockquote {

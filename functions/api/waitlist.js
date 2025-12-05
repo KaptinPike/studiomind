@@ -1,15 +1,8 @@
-// Netlify serverless function to send waitlist confirmation emails via SMTP2go
-// The API key is stored securely as an environment variable
+// Cloudflare Pages Function to send waitlist confirmation emails via SMTP2go
+// Environment variable: SMTP2GO_API_KEY (set in Cloudflare Pages dashboard)
 
-exports.handler = async (event) => {
-    // Only allow POST requests
-    if (event.httpMethod !== 'POST') {
-        return {
-            statusCode: 405,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ error: 'Method not allowed' })
-        };
-    }
+export async function onRequestPost(context) {
+    const { request, env } = context;
 
     // CORS headers
     const headers = {
@@ -18,30 +11,23 @@ exports.handler = async (event) => {
         'Content-Type': 'application/json'
     };
 
-    // Handle preflight
-    if (event.httpMethod === 'OPTIONS') {
-        return { statusCode: 200, headers, body: '' };
-    }
-
     try {
-        const { email } = JSON.parse(event.body);
+        const { email } = await request.json();
 
         if (!email) {
-            return {
-                statusCode: 400,
-                headers,
-                body: JSON.stringify({ error: 'Email is required' })
-            };
+            return new Response(
+                JSON.stringify({ error: 'Email is required' }),
+                { status: 400, headers }
+            );
         }
 
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return {
-                statusCode: 400,
-                headers,
-                body: JSON.stringify({ error: 'Invalid email format' })
-            };
+            return new Response(
+                JSON.stringify({ error: 'Invalid email format' }),
+                { status: 400, headers }
+            );
         }
 
         const emailContent = `
@@ -96,9 +82,9 @@ exports.handler = async (event) => {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                api_key: process.env.SMTP2GO_API_KEY,
+                api_key: env.SMTP2GO_API_KEY,
                 to: [email],
-                sender: `StudioMind <${process.env.FROM_EMAIL || 'hello@studiomind.io'}>`,
+                sender: `StudioMind <${env.FROM_EMAIL || 'hello@studiomind.io'}>`,
                 subject: "Welcome to StudioMind! You're on the waitlist",
                 html_body: emailContent,
                 text_body: `Welcome to the StudioMind Waitlist!\n\nThank you for joining! We're thrilled to have you on board.\n\nAs a founding member, you'll get:\n- Early access before public launch\n- Special founding member pricing\n- Direct input on features we build\n\nWe'll be in touch soon with updates.\n\nBest,\nThe StudioMind Team`
@@ -108,27 +94,33 @@ exports.handler = async (event) => {
         const data = await response.json();
 
         if (data.data && data.data.succeeded > 0) {
-            return {
-                statusCode: 200,
-                headers,
-                body: JSON.stringify({ success: true, message: 'Email sent successfully' })
-            };
+            return new Response(
+                JSON.stringify({ success: true, message: 'Email sent successfully' }),
+                { status: 200, headers }
+            );
         } else {
             console.error('SMTP2go error:', data);
-            return {
-                statusCode: 500,
-                headers,
-                body: JSON.stringify({
-                    error: data.data?.failures?.[0]?.error || 'Failed to send email'
-                })
-            };
+            return new Response(
+                JSON.stringify({ error: data.data?.failures?.[0]?.error || 'Failed to send email' }),
+                { status: 500, headers }
+            );
         }
     } catch (error) {
         console.error('Error:', error);
-        return {
-            statusCode: 500,
-            headers,
-            body: JSON.stringify({ error: 'Internal server error' })
-        };
+        return new Response(
+            JSON.stringify({ error: 'Internal server error' }),
+            { status: 500, headers }
+        );
     }
-};
+}
+
+// Handle CORS preflight
+export async function onRequestOptions() {
+    return new Response(null, {
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+        }
+    });
+}

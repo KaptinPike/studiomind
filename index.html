@@ -65,29 +65,14 @@
         }
 
         .logo {
-            font-family: 'DM Serif Display', serif;
-            font-size: 28px;
-            color: var(--text);
             text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 10px;
         }
 
-        .logo-icon {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-soft) 100%);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .logo-icon svg {
-            width: 20px;
-            height: 20px;
-            fill: white;
+        .logo img {
+            height: 40px;
+            width: auto;
         }
 
         nav a.cta-small {
@@ -592,12 +577,7 @@
     <div class="container">
         <nav>
             <a href="#" class="logo">
-                <div class="logo-icon">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                    </svg>
-                </div>
-                StudioMind
+                <img src="assets/logo.png" alt="StudioMind">
             </a>
             <a href="#waitlist" class="cta-small">Join Waitlist</a>
         </nav>
